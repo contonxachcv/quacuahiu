@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tặng emm</title>
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: url(./anh/nen.jpg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .heart-container {
+            position: relative;
+            width: 90vmin; /* Sử dụng vmin để responsive */
+            max-width: 600px;
+            height: 90vmin;
+            aspect-ratio: 1; /* Giữ tỷ lệ 1:1 */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .photo {
+            position: absolute;
+            width: 10vmin; /* Responsive size */
+            height: 10vmin;
+            max-width: 60px;
+            max-height: 60px;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.6);
+            transition: transform 0.3s;
+            opacity: 0;
+            animation: fadeIn 1.5s forwards;
+        }
+        
+        .photo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        .photo:hover {
+            transform: scale(1.2);
+            z-index: 2;
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        /* Vị trí ảnh sẽ được set bằng JavaScript để responsive */
+    </style>
+</head>
+
+<body>
+    <canvas id="stars"></canvas>
+
+    <div class="heart-container" id="heart"></div>
+
+    <script>
+        const totalImages = 4; 
+        const imageSources = [];
+        for (let i = 1; i <= totalImages; i++) {
+            imageSources.push(`anh/${i}.jpg`);
+        }
+
+        const heart = document.getElementById("heart");
+        const photoPositions = [
+            { top: 13.3, left: 43.3 }, // %
+            { top: 10, left: 56.7 },
+            { top: 10, left: 30 },
+            { top: 18.3, left: 68.3 },
+            { top: 18.3, left: 18.3 },
+            { top: 30.8, left: 73.3 },
+            { top: 30.8, left: 12.5 },
+            { top: 42.5, left: 70 },
+            { top: 42.5, left: 18.3 },
+            { top: 51.7, left: 56.7 },
+            { top: 51.7, left: 30.8 },
+            { top: 61.7, left: 43.3 }
+        ];
+
+        // Tạo các ảnh với vị trí responsive
+        function createPhotos() {
+            heart.innerHTML = ''; // Clear existing photos
+            for (let i = 0; i < 12; i++) {
+                const div = document.createElement("div");
+                div.className = "photo";
+                div.style.top = `${photoPositions[i].top}%`;
+                div.style.left = `${photoPositions[i].left}%`;
+                div.style.animationDelay = `${i * 0.1}s`;
+                
+                const img = document.createElement("img");
+                img.src = imageSources[0];
+                img.alt = `Photo ${i + 1}`;
+                div.appendChild(img);
+                heart.appendChild(div);
+            }
+        }
+
+
+        function updateLayout() {
+            const container = heart;
+            const containerSize = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+            
+            // Cập nhật kích thước container
+            container.style.width = `${containerSize}px`;
+            container.style.height = `${containerSize}px`;
+            
+            // Cập nhật kích thước ảnh
+            document.querySelectorAll('.photo').forEach(photo => {
+                const size = Math.min(containerSize * 0.1, 60);
+                photo.style.width = `${size}px`;
+                photo.style.height = `${size}px`;
+            });
+        }
+
+        let currentIndex = 0;
+        const interval = setInterval(() => {
+            currentIndex++;
+            if (currentIndex >= imageSources.length) {
+                clearInterval(interval);
+                return;
+            }
+
+            document.querySelectorAll('.photo img').forEach(img => {
+                img.style.opacity = 0;
+                setTimeout(() => {
+                    img.src = imageSources[currentIndex];
+                    img.style.opacity = 1;
+                }, 200);
+            });
+        }, 2000);
+
+
+        const canvas = document.getElementById('stars');
+        const ctx = canvas.getContext('2d');
+        let stars = [],
+            hearts = [];
+
+        function initStars(count) {
+            stars = [];
+            for (let i = 0; i < count; i++) {
+                stars.push({
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    radius: Math.random() * 1.5 + 0.5,
+                    alpha: Math.random(),
+                    delta: Math.random() * 0.02
+                });
+            }
+        }
+
+        class Heart {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * window.innerWidth;
+                this.y = window.innerHeight + 20;
+                this.size = Math.random() * 15 + 15;
+                this.speed = Math.random() * 1 + 0.5;
+                this.alpha = 1;
+                this.rotation = Math.random() * 2 * Math.PI;
+                this.rotationSpeed = (Math.random() - 0.5) * 0.02;
+                this.pulse = 0;
+                this.pulseSpeed = 0.05 + Math.random() * 0.05;
+            }
+
+            update() {
+                this.y -= this.speed;
+                this.alpha -= 0.004;
+                this.rotation += this.rotationSpeed;
+                this.pulse += this.pulseSpeed;
+                if (this.alpha <= 0 || this.y + this.size < 0) this.reset();
+            }
+
+            draw(ctx) {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.globalAlpha = this.alpha;
+                const scale = 1 + 0.1 * Math.sin(this.pulse);
+                ctx.scale(scale, scale);
+
+                const grad = ctx.createRadialGradient(0, 0, this.size / 5, 0, 0, this.size);
+                grad.addColorStop(0, 'rgba(255, 150, 180, 0.9)');
+                grad.addColorStop(1, 'rgba(255, 50, 100, 0.3)');
+                ctx.fillStyle = grad;
+
+                const s = this.size;
+                ctx.beginPath();
+                ctx.moveTo(0, s / 4);
+                ctx.bezierCurveTo(0, 0, -s / 2, 0, -s / 2, s / 4);
+                ctx.bezierCurveTo(-s / 2, s / 2, 0, s * 0.75, 0, s);
+                ctx.bezierCurveTo(0, s * 0.75, s / 2, s / 2, s / 2, s / 4);
+                ctx.bezierCurveTo(s / 2, 0, 0, 0, 0, s / 4);
+                ctx.closePath();
+
+                ctx.shadowColor = 'rgba(255, 0, 50, 0.5)';
+                ctx.shadowBlur = 8;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function initHearts(count) {
+            hearts = [];
+            for (let i = 0; i < count; i++) hearts.push(new Heart());
+        }
+
+        function drawStars() {
+            for (let star of stars) {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 182, 193, ${star.alpha})`;
+                ctx.fill();
+                star.alpha += star.delta;
+                if (star.alpha <= 0 || star.alpha >= 1) star.delta *= -1;
+            }
+        }
+
+        function drawHearts() {
+            for (let heart of hearts) {
+                heart.update();
+                heart.draw(ctx);
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawStars();
+            drawHearts();
+            requestAnimationFrame(animate);
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initStars(200);
+            initHearts(30);
+            updateLayout(); 
+        }
+
+        createPhotos();
+        updateLayout();
+        
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            createPhotos(); 
+        });
+        
+        resizeCanvas();
+        animate();
+    </script>
+</body>
+
+</html>
